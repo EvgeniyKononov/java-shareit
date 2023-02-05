@@ -8,7 +8,9 @@ public interface ItemService {
     ItemDto createItem(Long userId, ItemDto itemDto);
 
     ItemDto findItem(Long id);
+
     List<ItemDto> findItemsByOwner(Long userId);
+
     List<ItemDto> findItemsByText(String text);
 
     ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto);

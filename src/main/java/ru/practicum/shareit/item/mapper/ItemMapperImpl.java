@@ -19,7 +19,7 @@ public class ItemMapperImpl implements ItemMapper {
     }
 
     @Override
-    public Item createNewEntity (Long userId, ItemDto dto) {
+    public Item createNewEntity(Long userId, ItemDto dto) {
         return new Item(
                 dto.getId(),
                 dto.getName(),
@@ -28,6 +28,7 @@ public class ItemMapperImpl implements ItemMapper {
                 userId
         );
     }
+
     @Override
     public Item toEntity(ItemDto dto, Long id) {
         Item item = itemRepository.find(id);

@@ -25,6 +25,7 @@ public class UserController {
     public UserDto find(@PathVariable Long id) {
         return userService.findUser(id);
     }
+
     @GetMapping
     public List<UserDto> getAll() {
         return userService.getAll();

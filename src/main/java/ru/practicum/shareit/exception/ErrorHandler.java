@@ -14,6 +14,7 @@ public class ErrorHandler {
     public Map<String, String> handleValidationException(final AuthOwnerException e) {
         return Map.of("error", e.getMessage());
     }
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> handleDuplicateException(final DuplicateUserException e) {
