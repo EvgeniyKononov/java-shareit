@@ -63,7 +63,7 @@ public class ItemServiceImpl implements ItemService {
             if ((item.getName().toLowerCase().contains(text.toLowerCase()) ||
                     item.getDescription().toLowerCase().contains(text.toLowerCase())) &&
                     item.getAvailable() &&
-                    text != "") {
+                    !text.equals("")) {
                 itemsDto.add(itemMapper.toDto(item));
             }
         }
@@ -73,7 +73,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
         Item item = itemRepository.find(itemId);
-        if (item.getOwner() == userId) {
+        if (Objects.equals(item.getOwner(), userId)) {
             return itemMapper.toDto(itemRepository.amend(itemMapper.toEntity(itemDto, itemId)));
         } else {
             throw new AuthOwnerException("Пользователь не является владельцем вещи");
