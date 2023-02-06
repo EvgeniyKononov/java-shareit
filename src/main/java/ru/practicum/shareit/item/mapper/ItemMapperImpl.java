@@ -25,7 +25,8 @@ public class ItemMapperImpl implements ItemMapper {
                 dto.getName(),
                 dto.getDescription(),
                 dto.getAvailable(),
-                userId
+                userId,
+                null
         );
     }
 
@@ -49,7 +50,8 @@ public class ItemMapperImpl implements ItemMapper {
                 name,
                 description,
                 available,
-                item.getOwner()
+                item.getOwner(),
+                item.getItemRequest()
         );
     }
 
