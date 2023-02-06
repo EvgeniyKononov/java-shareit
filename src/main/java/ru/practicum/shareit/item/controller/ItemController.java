@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping("/items")
 public class ItemController {
     private final ItemService itemService;
-    private final String userId = "X-Sharer-User-Id";
+    private final String userIdHeader = "X-Sharer-User-Id";
 
     @Autowired
     public ItemController(ItemService itemService) {
@@ -23,37 +23,37 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto find(@RequestHeader(userId) Long userId,
+    public ItemDto find(@RequestHeader(userIdHeader) Long userId,
                         @PathVariable Long itemId) {
         return itemService.findItem(itemId);
     }
 
     @GetMapping
-    public List<ItemDto> find(@RequestHeader(userId) Long userId) {
+    public List<ItemDto> find(@RequestHeader(userIdHeader) Long userId) {
         return itemService.findItemsByOwner(userId);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> find(@RequestHeader(userId) Long userId,
+    public List<ItemDto> find(@RequestHeader(userIdHeader) Long userId,
                               @RequestParam String text) {
         return itemService.findItemsByText(text);
     }
 
     @PostMapping
-    public ItemDto create(@RequestHeader(userId) Long userId,
+    public ItemDto create(@RequestHeader(userIdHeader) Long userId,
                           @Valid @RequestBody ItemDto itemDto) {
         return itemService.createItem(userId, itemDto);
     }
 
     @PatchMapping(value = "/{itemId}")
-    public ItemDto amend(@RequestHeader(userId) Long userId,
+    public ItemDto amend(@RequestHeader(userIdHeader) Long userId,
                          @PathVariable Long itemId,
                          @Valid @RequestBody ItemDto itemDto) {
         return itemService.updateItem(userId, itemId, itemDto);
     }
 
     @DeleteMapping(value = "/{id}")
-    public void delete(@RequestHeader(userId) Long userId,
+    public void delete(@RequestHeader(userIdHeader) Long userId,
                        @PathVariable Long id) {
         itemService.deleteItem(userId, id);
     }
