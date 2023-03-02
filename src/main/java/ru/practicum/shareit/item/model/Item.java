@@ -1,29 +1,39 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.Data;
-import lombok.NonNull;
+import lombok.*;
 import ru.practicum.shareit.exception.EmptyPointerException;
-import ru.practicum.shareit.request.ItemRequest;
 
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 /**
  * TODO Sprint add-controllers.
  */
-@Data
+@Entity
+@Table(name = "items", schema = "public")
+@Getter
+@Setter
+@ToString
 public class Item {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotEmpty
+    @NotBlank
     private String name;
-    @NotEmpty
+    @NotNull
     private String description;
-    @NonNull
+    @NotNull
     private Boolean available;
+    @Column(name = "owner_id")
     private Long owner;
-    private ItemRequest itemRequest;
+    @Column (name = "request_id")
+    private Long request;
 
-    public Item(Long id, @NotEmpty String name, @NotEmpty String description, @NonNull Boolean available, Long owner, ItemRequest itemRequest) {
+    public Item(Long id, @NotEmpty String name, @NotEmpty String description, @NonNull Boolean available, Long owner,
+                Long itemRequest) {
         if (Objects.isNull(name) || Objects.isNull(description) || name.isEmpty() || description.isEmpty()) {
             throw new EmptyPointerException("Значение имени или описания не могут быть пустыми");
         }
@@ -32,6 +42,10 @@ public class Item {
         this.description = description;
         this.available = available;
         this.owner = owner;
-        this.itemRequest = itemRequest;
+        this.request = itemRequest;
+    }
+
+    public Item() {
+
     }
 }

@@ -2,18 +2,19 @@ package ru.practicum.shareit.user.mapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.user.dao.UserRepository;
+import ru.practicum.shareit.user.dao.JpaUserRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserDto;
 
 import java.util.Objects;
+import java.util.Optional;
 
 @Component
 public class UserMapperImpl implements UserMapper {
-    private final UserRepository userRepository;
+    private final JpaUserRepository userRepository;
 
     @Autowired
-    public UserMapperImpl(UserRepository userRepository) {
+    public UserMapperImpl(JpaUserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -28,7 +29,11 @@ public class UserMapperImpl implements UserMapper {
 
     @Override
     public User toEntity(UserDto dto, Long id) {
-        User user = userRepository.find(id);
+        Optional<User> userOptional = userRepository.findById(id);
+        User user = new User();
+        if (userOptional.isPresent()) {
+            user = userOptional.get();
+        }
         String name = user.getName();
         String email = user.getEmail();
         if (Objects.nonNull(dto.getName())) {
@@ -42,6 +47,7 @@ public class UserMapperImpl implements UserMapper {
                 name,
                 email
         );
+
     }
 
     @Override
