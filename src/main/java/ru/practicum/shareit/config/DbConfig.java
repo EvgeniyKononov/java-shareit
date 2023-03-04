@@ -50,7 +50,6 @@ public class DbConfig {
         return builder
                 .dataSource(dataSource)
                 .packages("ru.practicum.shareit")
-               // .persistenceUnit("qa-2023-01-21")
                 .build();
     }
 

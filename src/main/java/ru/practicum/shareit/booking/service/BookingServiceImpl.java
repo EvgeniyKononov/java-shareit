@@ -3,13 +3,13 @@ package ru.practicum.shareit.booking.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dao.BookingRepository;
-import ru.practicum.shareit.booking.mapper.BookingMapper;
 
 import ru.practicum.shareit.booking.model.*;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.dao.JpaItemRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.dao.JpaUserRepository;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,36 +19,34 @@ import static ru.practicum.shareit.constant.Constant.*;
 @Service
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
-    private final BookingMapper bookingMapper;
     private final JpaItemRepository itemRepository;
     private final JpaUserRepository userRepository;
 
     @Autowired
     public BookingServiceImpl(BookingRepository bookingRepository,
-                              BookingMapper bookingMapper,
                               JpaItemRepository itemRepository,
                               JpaUserRepository userRepository) {
         this.bookingRepository = bookingRepository;
-        this.bookingMapper = bookingMapper;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
     }
 
     @Override
-    public BookingOutputDto createBooking(Long id, BookingDto bookingDto) {
-        checkItem(bookingDto.getItemId());
-        if (bookingDto.getEnd().isBefore(bookingDto.getStart())) {
+    public Booking createBooking(Long bookerId, Booking booking) {
+        Item item = checkAndGetItem(booking.getItem().getId());
+        User booker = checkAndGetUser(bookerId);
+        if (booking.getEnd().isBefore(booking.getStart())) {
             throw new IncorrectTimeException(INCORRECT_TIME_MSG);
         }
-        if (bookingDto.getItemId().equals(id)) {
+        if (Objects.equals(item.getOwner().getId(), bookerId)) {
             throw new AuthOwnerException(BOOK_MISTAKE_MSG);
         }
-        Booking booking = bookingRepository.save(bookingMapper.toNewEntity(id, bookingDto));
-        return bookingMapper.toOutputDto(booking);
+        Booking newBooking = new Booking(null, booking.getStart(), booking.getEnd(), item, booker, booking.getStatus());
+        return bookingRepository.save(newBooking);
     }
 
     @Override
-    public BookingOutputDto updateBooking(Long userId, Long bookingId, Boolean approved) {
+    public Booking updateBooking(Long userId, Long bookingId, Boolean approved) {
         Optional<Booking> booking = bookingRepository.findById(bookingId);
         if (booking.isPresent()) {
             Booking updatedBooking = booking.get();
@@ -63,7 +61,7 @@ public class BookingServiceImpl implements BookingService {
                 } else {
                     updatedBooking.setStatus(Status.REJECTED);
                 }
-                return bookingMapper.toOutputDto(bookingRepository.save(updatedBooking));
+                return bookingRepository.save(updatedBooking);
             } else {
                 throw new AuthOwnerException(USER_NOT_OWNER_MSG);
             }
@@ -73,13 +71,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingOutputDto findBooking(Long userId, Long bookingId) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundUserException(NOT_FOUND_USER_ID));
+    public Booking findBooking(Long userId, Long bookingId) {
         Optional<Booking> booking = bookingRepository.findById(bookingId);
         if (booking.isPresent()) {
             Booking searchedBooking = booking.get();
             if (isOwner(userId, searchedBooking) || isBooker(userId, searchedBooking)) {
-                return bookingMapper.toOutputDto(searchedBooking);
+                return searchedBooking;
             } else {
                 throw new AuthOwnerException(USER_NOT_OWNER_OR_BOOKER_MSG);
             }
@@ -89,59 +86,53 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingOutputDto> findAllBookingsByBookerId(Long userId, String searchedState) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundUserException(NOT_FOUND_USER_ID));
+    public List<Booking> findAllBookingsByBookerId(Long userId, String searchedState) {
         List<Booking> bookings = bookingRepository.findByBookerId(userId);
-        List<BookingOutputDto> bookingsDto = new ArrayList<>();
-        return getBookingDtos(searchedState, bookings, bookingsDto);
+        if (bookings.isEmpty()) {
+            throw new NotFoundBookingException(NOT_FOUND_BOOKING_ID);
+        }
+        return getBookings(searchedState, bookings);
     }
 
     @Override
-    public List<BookingOutputDto> findAllBookingsByOwnerId(Long userId, String searchedState) {
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundUserException(NOT_FOUND_USER_ID));
-        List<Item> items = itemRepository.findAllByOwner(userId);
-        List<Booking> bookings = new ArrayList<>();
-        List<BookingOutputDto> bookingsDto = new ArrayList<>();
-        for (Item item : items) {
-            bookings.addAll(bookingRepository.findByItem(item.getId()));
+    public List<Booking> findAllBookingsByOwnerId(Long userId, String searchedState) {
+        List<Booking> bookings = new ArrayList<>(bookingRepository.findAllByItem_Owner_Id(userId));
+        if (bookings.isEmpty()) {
+            throw new NotFoundBookingException(NOT_FOUND_BOOKING_ID);
         }
-        return getBookingDtos(searchedState, bookings, bookingsDto);
+        return getBookings(searchedState, bookings);
     }
 
-    private List<BookingOutputDto> getBookingDtos(String searchedState, List<Booking> bookings,
-                                                  List<BookingOutputDto> bookingsDto) {
-        for (Booking booking : bookings) {
-            bookingsDto.add(bookingMapper.toOutputDto(booking));
-        }
+    private List<Booking> getBookings(String searchedState, List<Booking> bookings) {
         if (searchedState.equals("ALL")) {
-            return bookingsDto.stream()
-                    .sorted((Comparator.comparing(BookingOutputDto::getStart)).reversed())
+            return bookings.stream()
+                    .sorted((Comparator.comparing(Booking::getStart)).reversed())
                     .collect(Collectors.toList());
         } else if (Objects.equals(checkAndReturnState(searchedState), State.WAITING)) {
-            return bookingsDto.stream()
-                    .filter(dto -> dto.getStatus().equals(Status.WAITING))
-                    .sorted((Comparator.comparing(BookingOutputDto::getStart)).reversed())
+            return bookings.stream()
+                    .filter(booking -> booking.getStatus().equals(Status.WAITING))
+                    .sorted((Comparator.comparing(Booking::getStart)).reversed())
                     .collect(Collectors.toList());
         } else if (Objects.equals(checkAndReturnState(searchedState), State.CURRENT)) {
-            List<BookingOutputDto> currentBookingsDto = new ArrayList<>();
-            for (BookingOutputDto bookingOutputDto : bookingsDto) {
-                if (!bookingOutputDto.getState(bookingOutputDto).equals(State.FUTURE)
-                        && !bookingOutputDto.getState(bookingOutputDto).equals(State.PAST))
-                    currentBookingsDto.add(bookingOutputDto);
+            List<Booking> currentBookings = new ArrayList<>();
+            for (Booking booking : bookings) {
+                if (!Objects.equals(Booking.getState(booking), State.FUTURE)
+                        && !Objects.equals(Booking.getState(booking), State.PAST))
+                    currentBookings.add(booking);
             }
-            return currentBookingsDto;
+            return currentBookings;
         } else {
-            return bookingsDto.stream()
-                    .filter(dto -> dto.getState(dto).equals(checkAndReturnState(searchedState)))
-                    .sorted((Comparator.comparing(BookingOutputDto::getStart)).reversed())
+            return bookings.stream()
+                    .filter(booking -> Objects.equals(Booking.getState(booking), checkAndReturnState(searchedState)))
+                    .sorted((Comparator.comparing(Booking::getStart)).reversed())
                     .collect(Collectors.toList());
         }
     }
 
     private Boolean isOwner(Long userId, Booking booking) {
-        List<Item> items = itemRepository.findAllByOwner(userId);
+        List<Item> items = itemRepository.findAllByOwner_Id(userId);
         for (Item item : items) {
-            if (item.getId().equals(booking.getItem())) {
+            if (item.getOwner().equals(booking.getItem().getOwner())) {
                 return true;
             }
         }
@@ -149,15 +140,21 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private Boolean isBooker(Long userId, Booking booking) {
-        return userId.equals(booking.getBookerId());
+        return userId.equals(booking.getBooker().getId());
     }
 
-    private void checkItem(Long itemId) {
+    private Item checkAndGetItem(Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundItemException(NOT_FOUND_ITEM_ID));
         if (!item.getAvailable()) {
             throw new NullPointerException(ITEM_IS_BOOKED_ALREADY_MSG);
         }
+        return item;
+    }
+
+    private User checkAndGetUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundItemException(NOT_FOUND_USER_ID));
     }
 
     private State checkAndReturnState(String state) {

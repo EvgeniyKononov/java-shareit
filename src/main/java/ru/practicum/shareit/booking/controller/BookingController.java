@@ -2,12 +2,15 @@ package ru.practicum.shareit.booking.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.booking.model.BookingDto;
-import ru.practicum.shareit.booking.model.BookingOutputDto;
+import ru.practicum.shareit.booking.dto.BookingInputDto;
+import ru.practicum.shareit.booking.dto.BookingOutputDto;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
 import java.util.List;
+
+import static ru.practicum.shareit.constant.Constant.USER_ID_HEADER;
 
 /**
  * TODO Sprint add-bookings.
@@ -16,7 +19,6 @@ import java.util.List;
 @RequestMapping(path = "/bookings")
 public class BookingController {
     private final BookingService bookingService;
-    private final String userIdHeader = "X-Sharer-User-Id";
 
     @Autowired
     public BookingController(BookingService bookingService) {
@@ -24,33 +26,33 @@ public class BookingController {
     }
 
     @PostMapping
-    public BookingOutputDto create(@RequestHeader(userIdHeader) Long userId,
-                                   @Valid @RequestBody BookingDto bookingDto) {
-        return bookingService.createBooking(userId, bookingDto);
+    public BookingOutputDto create(@RequestHeader(USER_ID_HEADER) Long userId,
+                                   @Valid @RequestBody BookingInputDto bookingDto) {
+        return BookingMapper.toOutputDto(bookingService.createBooking(userId, BookingMapper.toEntity(bookingDto)));
     }
 
     @PatchMapping(value = "/{bookingId}")
-    public BookingOutputDto amend(@RequestHeader(userIdHeader) Long userId,
+    public BookingOutputDto amend(@RequestHeader(USER_ID_HEADER) Long userId,
                                   @PathVariable Long bookingId,
                                   @RequestParam boolean approved) {
-        return bookingService.updateBooking(userId, bookingId, approved);
+        return BookingMapper.toOutputDto(bookingService.updateBooking(userId, bookingId, approved));
     }
 
     @GetMapping(value = "/{bookingId}")
-    public BookingOutputDto find(@RequestHeader(userIdHeader) Long userId,
+    public BookingOutputDto find(@RequestHeader(USER_ID_HEADER) Long userId,
                                  @PathVariable Long bookingId) {
-        return bookingService.findBooking(userId, bookingId);
+        return BookingMapper.toOutputDto(bookingService.findBooking(userId, bookingId));
     }
 
     @GetMapping
-    public List<BookingOutputDto> findAllByBooker(@RequestHeader(userIdHeader) Long userId,
+    public List<BookingOutputDto> findAllByBooker(@RequestHeader(USER_ID_HEADER) Long userId,
                                                   @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.findAllBookingsByBookerId(userId, state);
+        return BookingMapper.toOutputDtoList(bookingService.findAllBookingsByBookerId(userId, state));
     }
 
     @GetMapping(value = "/owner")
-    public List<BookingOutputDto> findAllByOwner(@RequestHeader(userIdHeader) Long userId,
+    public List<BookingOutputDto> findAllByOwner(@RequestHeader(USER_ID_HEADER) Long userId,
                                                  @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.findAllBookingsByOwnerId(userId, state);
+        return BookingMapper.toOutputDtoList(bookingService.findAllBookingsByOwnerId(userId, state));
     }
 }

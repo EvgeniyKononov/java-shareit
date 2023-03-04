@@ -7,7 +7,7 @@ import ru.practicum.shareit.user.dao.JpaUserRepository;
 import ru.practicum.shareit.exception.DuplicateUserException;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.model.UserDto;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.ArrayList;
 import java.util.List;

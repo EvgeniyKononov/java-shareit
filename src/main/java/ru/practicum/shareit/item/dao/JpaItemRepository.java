@@ -6,7 +6,7 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.List;
 
 public interface JpaItemRepository extends JpaRepository<Item, Long> {
-    List<Item> findAllByOwner(Long owner);
+    List<Item> findAllByOwner_Id(Long owner);
 
-    List<Item> findAllByOwnerOrderById(Long owner);
+    List<Item> findAllByOwner_IdOrderById(Long owner);
 }

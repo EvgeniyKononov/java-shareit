@@ -11,11 +11,12 @@ import java.util.Optional;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByBookerId(Long bookerId);
 
-    List<Booking> findByItem(Long itemId);
+    List<Booking> findAllByItem_Owner_Id(Long userId);
 
-    Optional<Booking> findFirstByItemAndStatusAndStartAfterOrderByStart(Long id, Status status, LocalDateTime start);
+    Optional<Booking> findFirstByItem_IdAndStatusAndStartAfterOrderByStart(Long id, Status status, LocalDateTime start);
 
-    Optional<Booking> findFirstByItemAndStatusAndEndBeforeOrderByEnd(Long id, Status status, LocalDateTime start);
+    Optional<Booking> findFirstByItem_IdAndStatusAndEndBeforeOrderByEnd(Long id, Status status, LocalDateTime start);
 
-    Optional<Booking> findFirstByItemAndEndBeforeAndStatus(Long id, LocalDateTime start, Status status);
+    Optional<Booking> findFirstByItem_IdAndEndBeforeAndStatus(Long id, LocalDateTime start, Status status);
+
 }

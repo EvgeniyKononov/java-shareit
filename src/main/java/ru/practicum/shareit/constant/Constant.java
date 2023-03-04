@@ -12,5 +12,6 @@ public class Constant {
     public static final String ITEM_IS_BOOKED_ALREADY_MSG = "Пользователь не является хозяином вещи";
     public static final String ITEM_WAS_NOT_BOOKED_BY_USER_MSG = "Предмет не был в аренде у этого пользователя";
     public static final String EMAIL_ALREADY_REGISTERED_MSG = "Пользователь с такой почтой уже зарегестрирован";
+    public static final String USER_ID_HEADER = "X-Sharer-User-Id";
 
 }
