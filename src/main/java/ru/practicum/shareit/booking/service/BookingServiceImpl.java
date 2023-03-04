@@ -4,6 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dao.BookingRepository;
 
+import ru.practicum.shareit.booking.dto.BookingInputDto;
+import ru.practicum.shareit.booking.dto.BookingOutputDto;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.*;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.dao.JpaItemRepository;
@@ -32,7 +35,8 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking createBooking(Long bookerId, Booking booking) {
+    public BookingOutputDto createBooking(Long bookerId, BookingInputDto inputDto) {
+        Booking booking = BookingMapper.toEntity(inputDto);
         Item item = checkAndGetItem(booking.getItem().getId());
         User booker = checkAndGetUser(bookerId);
         if (booking.getEnd().isBefore(booking.getStart())) {
@@ -42,11 +46,11 @@ public class BookingServiceImpl implements BookingService {
             throw new AuthOwnerException(BOOK_MISTAKE_MSG);
         }
         Booking newBooking = new Booking(null, booking.getStart(), booking.getEnd(), item, booker, booking.getStatus());
-        return bookingRepository.save(newBooking);
+        return BookingMapper.toOutputDto(bookingRepository.save(newBooking));
     }
 
     @Override
-    public Booking updateBooking(Long userId, Long bookingId, Boolean approved) {
+    public BookingOutputDto updateBooking(Long userId, Long bookingId, Boolean approved) {
         Optional<Booking> booking = bookingRepository.findById(bookingId);
         if (booking.isPresent()) {
             Booking updatedBooking = booking.get();
@@ -61,7 +65,7 @@ public class BookingServiceImpl implements BookingService {
                 } else {
                     updatedBooking.setStatus(Status.REJECTED);
                 }
-                return bookingRepository.save(updatedBooking);
+                return BookingMapper.toOutputDto(bookingRepository.save(updatedBooking));
             } else {
                 throw new AuthOwnerException(USER_NOT_OWNER_MSG);
             }
@@ -71,12 +75,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking findBooking(Long userId, Long bookingId) {
+    public BookingOutputDto findBooking(Long userId, Long bookingId) {
         Optional<Booking> booking = bookingRepository.findById(bookingId);
         if (booking.isPresent()) {
             Booking searchedBooking = booking.get();
             if (isOwner(userId, searchedBooking) || isBooker(userId, searchedBooking)) {
-                return searchedBooking;
+                return BookingMapper.toOutputDto(searchedBooking);
             } else {
                 throw new AuthOwnerException(USER_NOT_OWNER_OR_BOOKER_MSG);
             }
@@ -86,25 +90,25 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<Booking> findAllBookingsByBookerId(Long userId, String searchedState) {
+    public List<BookingOutputDto> findAllBookingsByBookerId(Long userId, String searchedState) {
         List<Booking> bookings = bookingRepository.findByBookerId(userId);
         if (bookings.isEmpty()) {
             throw new NotFoundBookingException(NOT_FOUND_BOOKING_ID);
         }
-        return getBookings(searchedState, bookings);
+        return BookingMapper.toOutputDtoList(getBookings(searchedState, bookings));
     }
 
     @Override
-    public List<Booking> findAllBookingsByOwnerId(Long userId, String searchedState) {
+    public List<BookingOutputDto> findAllBookingsByOwnerId(Long userId, String searchedState) {
         List<Booking> bookings = new ArrayList<>(bookingRepository.findAllByItem_Owner_Id(userId));
         if (bookings.isEmpty()) {
             throw new NotFoundBookingException(NOT_FOUND_BOOKING_ID);
         }
-        return getBookings(searchedState, bookings);
+        return BookingMapper.toOutputDtoList(getBookings(searchedState, bookings));
     }
 
     private List<Booking> getBookings(String searchedState, List<Booking> bookings) {
-        if (searchedState.equals("ALL")) {
+        if (searchedState.equals(ALL)) {
             return bookings.stream()
                     .sorted((Comparator.comparing(Booking::getStart)).reversed())
                     .collect(Collectors.toList());
