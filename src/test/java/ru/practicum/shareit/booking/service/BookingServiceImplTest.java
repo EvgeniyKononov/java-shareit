@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static ru.practicum.shareit.constant.Constant.NOT_FOUND_USER_ID;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceImplTest {
