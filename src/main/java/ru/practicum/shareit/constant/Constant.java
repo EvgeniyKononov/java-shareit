@@ -4,6 +4,7 @@ public class Constant {
     public static final String NOT_FOUND_USER_ID = "Нет пользователя с таким ID";
     public static final String NOT_FOUND_ITEM_ID = "Нет предмета с таким ID";
     public static final String NOT_FOUND_BOOKING_ID = "Нет букинга с таким ID";
+    public static final String NOT_FOUND_REQUEST_MSG = "Нет запросов у данного пользователя";
     public static final String INCORRECT_TIME_MSG = "Неправильно задано время";
     public static final String BOOK_MISTAKE_MSG = "Предмет не может быть арендован сам у себя";
     public static final String STATUS_MISTAKE_MSG = "Статус уже установлен";

@@ -11,7 +11,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static ru.practicum.shareit.constant.Constant.EMAIL_ALREADY_REGISTERED_MSG;
@@ -55,9 +54,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto updateUser(UserDto userDto, Long id) {
         User user = userMapper.toEntity(userDto, id);
-        if (Objects.nonNull(userDto.getEmail())) {
-            checkEmailDuplicate(user);
-        }
+        checkEmailDuplicate(user);
         return userMapper.toDto(userRepository.save(user));
     }
 

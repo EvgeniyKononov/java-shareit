@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -31,14 +32,18 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> find(@RequestHeader(USER_ID_HEADER) Long userId) {
-        return itemService.findItemsByOwner(userId);
+    public List<ItemDto> find(@RequestHeader(USER_ID_HEADER) Long userId,
+                              @RequestParam(required = false, defaultValue = "0") int from,
+                              @RequestParam(required = false, defaultValue = "10") int size) {
+        return itemService.findItemsByOwner(userId, PageRequest.of(from, size));
     }
 
     @GetMapping("/search")
     public List<ItemDto> find(@RequestHeader(USER_ID_HEADER) Long userId,
-                              @RequestParam String text) {
-        return itemService.findItemsByText(text);
+                              @RequestParam String text,
+                              @RequestParam(required = false, defaultValue = "0") int from,
+                              @RequestParam(required = false, defaultValue = "10") int size) {
+        return itemService.findItemsByText(text, PageRequest.of(from, size));
     }
 
     @PostMapping
