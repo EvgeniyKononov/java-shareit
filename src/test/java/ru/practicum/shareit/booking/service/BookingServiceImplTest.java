@@ -388,6 +388,7 @@ class BookingServiceImplTest {
         assertThrows(IllegalArgumentException.class,
                 () -> bookingService.findAllBookingsByBookerId(userId, searchedState, PageRequest.of(0, 10)));
     }
+
     @Test
     void findAllBookingsByOwnerId_whenBookingsNotFound_thenNotFoundBookingExceptionThrown() {
         String searchedState = "ALL";
