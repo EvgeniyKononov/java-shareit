@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 import ru.practicum.shareit.booking.dao.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingInputDto;
 import ru.practicum.shareit.booking.dto.BookingOutputDto;
@@ -19,6 +20,7 @@ import ru.practicum.shareit.user.dao.JpaUserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -213,14 +215,198 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void findBooking() {
+    void updateBooking_whenStatusRejected_thenBookingRejectedAndReturnDto() {
+        Boolean approved = false;
+        outputDto.setStatus(Status.REJECTED);
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(itemRepository.findAllByOwner_Id(userId)).thenReturn(List.of(item));
+        when(bookingRepository.save(booking)).thenReturn(booking);
+
+        BookingOutputDto actualDto = bookingService.updateBooking(userId, bookingId, approved);
+
+        assertEquals(outputDto, actualDto);
     }
 
     @Test
-    void findAllBookingsByBookerId() {
+    void updateBooking_whenStatusApproved_thenBookingApprovedAndReturnDto() {
+        Boolean approved = true;
+        outputDto.setStatus(Status.APPROVED);
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(itemRepository.findAllByOwner_Id(userId)).thenReturn(List.of(item));
+        when(bookingRepository.save(booking)).thenReturn(booking);
+
+        BookingOutputDto actualDto = bookingService.updateBooking(userId, bookingId, approved);
+
+        assertEquals(outputDto, actualDto);
     }
 
     @Test
-    void findAllBookingsByOwnerId() {
+    void findBooking_whenBookingNotFound_thenNotFoundBookingExceptionThrown() {
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundBookingException.class,
+                () -> bookingService.findBooking(userId, bookingId));
+
+    }
+
+    @Test
+    void findBooking_whenUserIsNotItemOwnerOrBooker_thenAuthOwnerExceptionThrown() {
+        User newUser = new User();
+        userId = 100L;
+        Item newItem = Item.builder()
+                .id(itemId)
+                .name("name")
+                .description("description")
+                .available(true)
+                .request(itemRequest)
+                .owner(newUser)
+                .build();
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(itemRepository.findAllByOwner_Id(userId)).thenReturn(List.of(newItem));
+
+        assertThrows(AuthOwnerException.class,
+                () -> bookingService.findBooking(userId, bookingId));
+    }
+
+    @Test
+    void findBooking_whenBookingFound_thenReturnDto() {
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(itemRepository.findAllByOwner_Id(userId)).thenReturn(List.of(item));
+
+        BookingOutputDto actualDto = bookingService.findBooking(userId, bookingId);
+
+        assertEquals(outputDto, actualDto);
+    }
+
+    @Test
+    void findAllBookingsByBookerId_whenBookingsNotFound_thenNotFoundBookingExceptionThrown() {
+        String searchedState = "ALL";
+        when(bookingRepository.findByBookerId(userId)).thenReturn(new ArrayList<>());
+
+        assertThrows(NotFoundBookingException.class,
+                () -> bookingService.findAllBookingsByBookerId(userId, searchedState, PageRequest.of(0, 10)));
+    }
+
+    @Test
+    void findAllBookingsByBookerId_whenStateAll_thenReturnAllBookings() {
+        String searchedState = "ALL";
+        List<Booking> bookings = new ArrayList<>(List.of(booking));
+        List<BookingOutputDto> expectedBookingsDto = new ArrayList<>(List.of(outputDto));
+        when(bookingRepository.findByBookerId(userId)).thenReturn(bookings);
+
+        List<BookingOutputDto> actualBookingsDto
+                = bookingService.findAllBookingsByBookerId(userId, searchedState, PageRequest.of(0, 10));
+
+        assertEquals(expectedBookingsDto, actualBookingsDto);
+    }
+
+    @Test
+    void findAllBookingsByBookerId_whenStateWaiting_thenReturnWaitingBookings() {
+        String searchedState = "WAITING";
+        List<Booking> bookings = new ArrayList<>(List.of(booking));
+        List<BookingOutputDto> expectedBookingsDto = new ArrayList<>(List.of(outputDto));
+        when(bookingRepository.findByBookerId(userId)).thenReturn(bookings);
+
+        List<BookingOutputDto> actualBookingsDto
+                = bookingService.findAllBookingsByBookerId(userId, searchedState, PageRequest.of(0, 10));
+
+        assertEquals(expectedBookingsDto, actualBookingsDto);
+    }
+
+    @Test
+    void findAllBookingsByBookerId_whenStateCurrent_thenReturnCurrentBookings() {
+        String searchedState = "CURRENT";
+        booking.setStart(current.minusDays(1));
+        booking.setEnd(current.plusDays(1));
+        outputDto.setStart(current.minusDays(1));
+        outputDto.setEnd(current.plusDays(1));
+        List<Booking> bookings = new ArrayList<>(List.of(booking));
+        List<BookingOutputDto> expectedBookingsDto = new ArrayList<>(List.of(outputDto));
+        when(bookingRepository.findByBookerId(userId)).thenReturn(bookings);
+
+        List<BookingOutputDto> actualBookingsDto
+                = bookingService.findAllBookingsByBookerId(userId, searchedState, PageRequest.of(0, 10));
+
+        assertEquals(expectedBookingsDto, actualBookingsDto);
+    }
+
+    @Test
+    void findAllBookingsByBookerId_whenStateFuture_thenReturnFutureBookings() {
+        String searchedState = "FUTURE";
+        booking.setStart(current.plusDays(1));
+        booking.setEnd(current.plusDays(2));
+        outputDto.setStart(current.plusDays(1));
+        outputDto.setEnd(current.plusDays(2));
+        List<Booking> bookings = new ArrayList<>(List.of(booking));
+        List<BookingOutputDto> expectedBookingsDto = new ArrayList<>(List.of(outputDto));
+        when(bookingRepository.findByBookerId(userId)).thenReturn(bookings);
+
+        List<BookingOutputDto> actualBookingsDto
+                = bookingService.findAllBookingsByBookerId(userId, searchedState, PageRequest.of(0, 10));
+
+        assertEquals(expectedBookingsDto, actualBookingsDto);
+    }
+
+    @Test
+    void findAllBookingsByBookerId_whenStatePast_thenReturnPastBookings() {
+        String searchedState = "PAST";
+        booking.setStart(current.minusDays(2));
+        booking.setEnd(current.minusDays(1));
+        outputDto.setStart(current.minusDays(2));
+        outputDto.setEnd(current.minusDays(1));
+        List<Booking> bookings = new ArrayList<>(List.of(booking));
+        List<BookingOutputDto> expectedBookingsDto = new ArrayList<>(List.of(outputDto));
+        when(bookingRepository.findByBookerId(userId)).thenReturn(bookings);
+
+        List<BookingOutputDto> actualBookingsDto
+                = bookingService.findAllBookingsByBookerId(userId, searchedState, PageRequest.of(0, 10));
+
+        assertEquals(expectedBookingsDto, actualBookingsDto);
+    }
+
+    @Test
+    void findAllBookingsByBookerId_whenStateRejected_thenReturnRejectedBookings() {
+        String searchedState = "REJECTED";
+        booking.setStatus(Status.CANCELLED);
+        outputDto.setStatus(Status.CANCELLED);
+        List<Booking> bookings = new ArrayList<>(List.of(booking));
+        List<BookingOutputDto> expectedBookingsDto = new ArrayList<>(List.of(outputDto));
+        when(bookingRepository.findByBookerId(userId)).thenReturn(bookings);
+
+        List<BookingOutputDto> actualBookingsDto
+                = bookingService.findAllBookingsByBookerId(userId, searchedState, PageRequest.of(0, 10));
+
+        assertEquals(expectedBookingsDto, actualBookingsDto);
+    }
+
+    @Test
+    void findAllBookingsByBookerId_whenStateUnknown_thenIllegalArgumentExceptionThrown() {
+        String searchedState = "UNKNOWN";
+        List<Booking> bookings = new ArrayList<>(List.of(booking));
+        when(bookingRepository.findByBookerId(userId)).thenReturn(bookings);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> bookingService.findAllBookingsByBookerId(userId, searchedState, PageRequest.of(0, 10)));
+    }
+    @Test
+    void findAllBookingsByOwnerId_whenBookingsNotFound_thenNotFoundBookingExceptionThrown() {
+        String searchedState = "ALL";
+        when(bookingRepository.findAllByItem_Owner_Id(userId)).thenReturn(new ArrayList<>());
+
+        assertThrows(NotFoundBookingException.class,
+                () -> bookingService.findAllBookingsByOwnerId(userId, searchedState, PageRequest.of(0, 10)));
+    }
+
+    @Test
+    void findAllBookingsByOwnerId_whenStateAll_thenReturnAllBookings() {
+        String searchedState = "ALL";
+        List<Booking> bookings = new ArrayList<>(List.of(booking));
+        List<BookingOutputDto> expectedBookingsDto = new ArrayList<>(List.of(outputDto));
+        when(bookingRepository.findAllByItem_Owner_Id(userId)).thenReturn(bookings);
+
+        List<BookingOutputDto> actualBookingsDto
+                = bookingService.findAllBookingsByOwnerId(userId, searchedState, PageRequest.of(0, 10));
+
+        assertEquals(expectedBookingsDto, actualBookingsDto);
     }
 }
