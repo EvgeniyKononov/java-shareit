@@ -34,7 +34,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handleEmptyPointerException(final EmptyPointerException e) {
         return Map.of("error", e.getMessage());
     }

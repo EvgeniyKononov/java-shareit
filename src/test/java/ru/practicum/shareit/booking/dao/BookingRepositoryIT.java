@@ -100,7 +100,7 @@ class BookingRepositoryIT {
     @Test
     void findFirstByItem_IdAndStatusAndEndBeforeOrderByEnd_whenInvoke_bookingReturn() {
         Optional<Booking> booking = bookingRepository
-                .findFirstByItem_IdAndStatusAndEndBeforeOrderByEnd(item.getId(), Status.WAITING, current.plusDays(2));
+                .findFirstByItem_IdAndStatusAndStartBeforeOrderByEndDesc(item.getId(), Status.WAITING, current.plusDays(2));
 
         assertTrue(booking.isPresent());
         assertEquals("супер вещь", booking.get().getItem().getDescription());

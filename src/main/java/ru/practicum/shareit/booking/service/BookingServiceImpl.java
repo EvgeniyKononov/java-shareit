@@ -40,9 +40,13 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = BookingMapper.toEntity(inputDto);
         Item item = checkAndGetItem(booking.getItem().getId());
         User booker = checkAndGetUser(bookerId);
-        if (booking.getEnd().isBefore(booking.getStart())) {
+        if (booking.getEnd().isBefore(booking.getStart()) || booking.getEnd().equals(booking.getStart())
+        || Objects.isNull(booking.getStart()) || Objects.isNull(booking.getEnd())) {
             throw new IncorrectTimeException(INCORRECT_TIME_MSG);
         }
+       /* if (Objects.isNull(booking.getStart()) || Objects.isNull(booking.getEnd())) {
+            throw new EmptyPointerException(INCORRECT_TIME_MSG);
+        }*/
         if (Objects.equals(item.getOwner().getId(), bookerId)) {
             throw new AuthOwnerException(BOOK_MISTAKE_MSG);
         }
