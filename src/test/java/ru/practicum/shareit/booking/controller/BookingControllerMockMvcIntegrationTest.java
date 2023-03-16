@@ -43,7 +43,11 @@ class BookingControllerMockMvcIntegrationTest {
     void setUp() {
         userId = 1L;
         bookingId = 1L;
-        inputDto = new BookingInputDto();
+        LocalDateTime current = LocalDateTime.now();
+        inputDto = BookingInputDto.builder()
+                .start(current.plusDays(1))
+                .end(current.plusDays(2))
+                .build();
         outputDto = new BookingOutputDto();
     }
 
