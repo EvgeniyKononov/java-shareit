@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingInputDto;
 import ru.practicum.shareit.booking.dto.BookingOutputDto;
@@ -45,13 +46,17 @@ public class BookingController {
 
     @GetMapping
     public List<BookingOutputDto> findAllByBooker(@RequestHeader(USER_ID_HEADER) Long userId,
-                                                  @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.findAllBookingsByBookerId(userId, state);
+                                                  @RequestParam(defaultValue = "ALL") String state,
+                                                  @RequestParam(required = false, defaultValue = "0") int from,
+                                                  @RequestParam(required = false, defaultValue = "10") int size) {
+        return bookingService.findAllBookingsByBookerId(userId, state, PageRequest.of(from, size));
     }
 
     @GetMapping(value = "/owner")
     public List<BookingOutputDto> findAllByOwner(@RequestHeader(USER_ID_HEADER) Long userId,
-                                                 @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.findAllBookingsByOwnerId(userId, state);
+                                                 @RequestParam(defaultValue = "ALL") String state,
+                                                 @RequestParam(required = false, defaultValue = "0") int from,
+                                                 @RequestParam(required = false, defaultValue = "10") int size) {
+        return bookingService.findAllBookingsByOwnerId(userId, state, PageRequest.of(from, size));
     }
 }

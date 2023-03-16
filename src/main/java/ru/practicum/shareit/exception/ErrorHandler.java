@@ -34,7 +34,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handleEmptyPointerException(final EmptyPointerException e) {
         return Map.of("error", e.getMessage());
     }
@@ -48,6 +48,12 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFoundBookingException(final NotFoundBookingException e) {
+        return Map.of("error", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleNotFoundRequestException(final NotFoundRequestException e) {
         return Map.of("error", e.getMessage());
     }
 

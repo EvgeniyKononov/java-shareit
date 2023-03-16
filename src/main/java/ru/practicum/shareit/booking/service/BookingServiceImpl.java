@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dao.BookingRepository;
 
@@ -39,9 +40,13 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = BookingMapper.toEntity(inputDto);
         Item item = checkAndGetItem(booking.getItem().getId());
         User booker = checkAndGetUser(bookerId);
-        if (booking.getEnd().isBefore(booking.getStart())) {
+        if (booking.getEnd().isBefore(booking.getStart()) || booking.getEnd().equals(booking.getStart())
+        || Objects.isNull(booking.getStart()) || Objects.isNull(booking.getEnd())) {
             throw new IncorrectTimeException(INCORRECT_TIME_MSG);
         }
+       /* if (Objects.isNull(booking.getStart()) || Objects.isNull(booking.getEnd())) {
+            throw new EmptyPointerException(INCORRECT_TIME_MSG);
+        }*/
         if (Objects.equals(item.getOwner().getId(), bookerId)) {
             throw new AuthOwnerException(BOOK_MISTAKE_MSG);
         }
@@ -90,21 +95,25 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingOutputDto> findAllBookingsByBookerId(Long userId, String searchedState) {
+    public List<BookingOutputDto> findAllBookingsByBookerId(Long userId, String searchedState, PageRequest pageRequest) {
         List<Booking> bookings = bookingRepository.findByBookerId(userId);
         if (bookings.isEmpty()) {
             throw new NotFoundBookingException(NOT_FOUND_BOOKING_ID);
         }
-        return BookingMapper.toOutputDtoList(getBookings(searchedState, bookings));
+        List<BookingOutputDto> bookingsDto = BookingMapper.toOutputDtoList(getBookings(searchedState, bookings));
+        return bookingsDto.subList(pageRequest.getPageNumber(),
+                Math.min(bookingsDto.size(), pageRequest.getPageNumber() + pageRequest.getPageSize()));
     }
 
     @Override
-    public List<BookingOutputDto> findAllBookingsByOwnerId(Long userId, String searchedState) {
+    public List<BookingOutputDto> findAllBookingsByOwnerId(Long userId, String searchedState, PageRequest pageRequest) {
         List<Booking> bookings = new ArrayList<>(bookingRepository.findAllByItem_Owner_Id(userId));
         if (bookings.isEmpty()) {
             throw new NotFoundBookingException(NOT_FOUND_BOOKING_ID);
         }
-        return BookingMapper.toOutputDtoList(getBookings(searchedState, bookings));
+        List<BookingOutputDto> bookingsDto = BookingMapper.toOutputDtoList(getBookings(searchedState, bookings));
+        return bookingsDto.subList(pageRequest.getPageNumber(),
+                Math.min(bookingsDto.size(), pageRequest.getPageNumber() + pageRequest.getPageSize()));
     }
 
     private List<Booking> getBookings(String searchedState, List<Booking> bookings) {
