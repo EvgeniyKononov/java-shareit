@@ -9,9 +9,7 @@ import javax.validation.constraints.Email;
 @AllArgsConstructor
 @Setter
 public class UserRequestDto {
-    @NonNull
     private String name;
-    @NonNull
     @Email
     private String email;
 }

@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ShareItServer {
 
     public static void main(String[] args) {
+        System.setProperty("server.port", "9090");
         SpringApplication.run(ShareItServer.class, args);
     }
-
 }

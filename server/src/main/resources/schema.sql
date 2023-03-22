@@ -1,8 +1,8 @@
---drop table bookings;
---drop table comments;
---drop table items;
---drop table requests;
---drop table users;
+drop table bookings;
+drop table comments;
+drop table items;
+drop table requests;
+drop table users;
 
 CREATE TABLE IF NOT EXISTS users
 (

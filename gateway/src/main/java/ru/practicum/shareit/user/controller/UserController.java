@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -10,6 +11,7 @@ import ru.practicum.shareit.user.client.UserClient;
 import ru.practicum.shareit.user.dto.UserRequestDto;
 
 import javax.validation.Valid;
+import java.util.Objects;
 
 @Controller
 @RequestMapping(path = "/users")
@@ -34,6 +36,9 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody UserRequestDto userDto) {
+        if (Objects.isNull(userDto.getName()) || Objects.isNull(userDto.getEmail())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         log.info("Creating user {}", userDto);
         return userClient.createUser(userDto);
     }
