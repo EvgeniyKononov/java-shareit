@@ -10,9 +10,6 @@ import java.util.List;
 
 import static ru.practicum.shareit.constant.Constant.USER_ID_HEADER;
 
-/**
- * TODO Sprint add-item-requests.
- */
 @RestController
 @RequestMapping(path = "/requests")
 public class ItemRequestController {
